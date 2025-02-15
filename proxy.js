@@ -1,9 +1,10 @@
+require('dotenv').config(); // Load environment variables from .env file
 const express = require('express');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const cors = require('cors');
 
 const app = express();
-const TARGET_URL = 'http://4.188.255.22:8085/';
+const TARGET_URL = process.env.TARGET_URL; // Use environment variable
 
 // Enable CORS for all routes
 app.use(cors());
