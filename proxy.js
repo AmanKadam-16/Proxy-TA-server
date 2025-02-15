@@ -16,13 +16,13 @@ app.get('/', (req, res) => {
   res.send('CORS Proxy Server is Running!');
 });
 
-// Proxy middleware
+// Proxy middleware for all routes
 app.use(
-  '/proxylayer',
+  '/',
   createProxyMiddleware({
     target: TARGET_URL,
     changeOrigin: true,
-    pathRewrite: { '^/proxylayer': '' }, // Remove /api prefix before forwarding
+    // No pathRewrite needed since we are proxying directly to '/'
     onProxyReq: (proxyReq, req, res) => {
       proxyReq.setHeader('Origin', TARGET_URL); // Set the origin header
     },
