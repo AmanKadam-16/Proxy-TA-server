@@ -18,11 +18,11 @@ app.get('/', (req, res) => {
 
 // Proxy middleware
 app.use(
-  '/apidata',
+  '/proxylayer',
   createProxyMiddleware({
     target: TARGET_URL,
     changeOrigin: true,
-    pathRewrite: { '^/apidata': '' }, // Remove /api prefix before forwarding
+    pathRewrite: { '^/proxylayer': '' }, // Remove /api prefix before forwarding
     onProxyReq: (proxyReq, req, res) => {
       proxyReq.setHeader('Origin', TARGET_URL); // Set the origin header
     },
