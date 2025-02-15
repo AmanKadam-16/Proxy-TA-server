@@ -18,10 +18,10 @@ app.get('/', (req, res) => {
 
 // Dynamic target URL selection
 const getTargetUrl = (path) => {
-  if (path.startsWith('/TA')) return process.env.TA_BASE_URL;
-  if (path.startsWith('/RIT-API-Test')) return process.env.RIT_API_TEST_URL;
-  if (path.startsWith('/RIT-API')) return process.env.RIT_API_URL;
-  if (path.startsWith('/RIT')) return process.env.RIT_BASE_URL;
+  if (path.startsWith('/ta')) return process.env.TA_BASE_URL;
+  if (path.startsWith('/rit-api-test')) return process.env.RIT_API_TEST_URL;
+  if (path.startsWith('/rit-api')) return process.env.RIT_API_URL;
+  if (path.startsWith('/rit')) return process.env.RIT_BASE_URL;
   return process.env.DEFAULT_TARGET_URL; // Fallback target if no match
 };
 
