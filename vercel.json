@@ -17,10 +17,6 @@
         "dest": "/public/index.html"
       },
       {
-        "src": "/config",
-        "dest": "/proxy.js"
-      },
-      {
         "src": "/(ta-api|rit-test|rit-api|rit-base)/(.*)",
         "dest": "/proxy.js"
       },
