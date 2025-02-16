@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Gateway Dashboard</title>
+    <style>
+        :root {
+            --primary-color: #000000;
+            --secondary-color: #666666;
+            --background-color: #fafafa;
+            --card-background: #ffffff;
+            --text-color: #000000;
+            --border-color: #eaeaea;
+            --success-color: #0070f3;
+            --error-color: #ff0000;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            background-color: #000;
+            color: white;
+            padding: 0.5rem 1rem 0.5rem 2.5rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+            position: relative;
+            min-width: 180px;
+            justify-content: center;
+        }
+
+        .status-badge:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-badge:active {
+            transform: translateY(0);
+        }
+
+        .status-badge.online {
+            position: relative;
+            padding-left: 2.5rem;
+        }
+
+        .status-badge.online::before {
+            content: '';
+            position: absolute;
+            left: 1rem;
+            width: 8px;
+            height: 8px;
+            background: linear-gradient(45deg, #22c55e, #16a34a);
+            border-radius: 50%;
+            animation: gradient-pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes gradient-pulse {
+            0% {
+                box-shadow: 
+                    0 0 0 0 rgba(34, 197, 94, 0.4),
+                    0 0 0 0 rgba(34, 197, 94, 0.2);
+                transform: scale(0.95);
+            }
+            70% {
+                box-shadow: 
+                    0 0 0 6px rgba(34, 197, 94, 0),
+                    0 0 0 12px rgba(34, 197, 94, 0);
+                transform: scale(1);
+            }
+            100% {
+                box-shadow: 
+                    0 0 0 0 rgba(34, 197, 94, 0),
+                    0 0 0 0 rgba(34, 197, 94, 0);
+                transform: scale(0.95);
+            }
+        }
+
+        .status-badge:not(.online)::before {
+            content: '';
+            position: absolute;
+            left: 1rem;
+            width: 8px;
+            height: 8px;
+            background: linear-gradient(45deg, #ef4444, #dc2626);
+            border-radius: 50%;
+            animation: error-pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes error-pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+                transform: scale(0.95);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+                transform: scale(1);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+                transform: scale(0.95);
+            }
+        }
+
+        .endpoints-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .endpoint-card {
+            background: var(--card-background);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .endpoint-card::after {
+            content: 'Copied!';
+            position: absolute;
+            right: 1rem;
+            top: 1rem;
+            background: #000;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            opacity: 0;
+            transition: all 0.2s ease;
+            pointer-events: none;
+        }
+
+        .endpoint-card.copied::after {
+            opacity: 1;
+        }
+
+        .endpoint-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.1);
+        }
+
+        .endpoint-card:active {
+            transform: translateY(0);
+        }
+
+        .endpoint-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .endpoint-name {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .endpoint-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--secondary-color);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #666666; /* Neutral color */
+            transition: all 0.3s ease;
+        }
+
+        .endpoint-url {
+            background-color: #f5f5f5;
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-family: 'SF Mono', Menlo, Monaco, Consolas, monospace;
+            font-size: 0.875rem;
+            word-break: break-all;
+            margin-bottom: 1rem;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .endpoint-url::after {
+            content: 'Copied!';
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #000;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            opacity: 0;
+            transition: all 0.2s ease;
+            pointer-events: none;
+        }
+
+        .endpoint-url.copied::after {
+            opacity: 1;
+        }
+
+        .endpoint-url:hover {
+            background-color: #eaeaea;
+        }
+
+        .endpoint-metrics {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.875rem;
+            color: var(--secondary-color);
+        }
+
+        .metric {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            transition: all 0.2s ease;
+        }
+
+        .metric:hover {
+            color: var(--primary-color);
+        }
+
+        .metric:hover svg {
+            transform: rotate(90deg);
+            transition: transform 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+        }
+
+        /* Loading state for cards */
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        .endpoint-card.loading {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        /* Tip card styles */
+        .tip-card {
+            background: linear-gradient(to right, #000, #111);
+            color: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tip-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.2), transparent);
+        }
+
+        .tip-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+            color: #888;
+        }
+
+        .tip-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .tip-example {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-family: 'SF Mono', Menlo, Monaco, Consolas, monospace;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tip-example:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .tip-description {
+            font-size: 0.875rem;
+            color: #888;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 768px) {
+            .tip-content {
+                flex-direction: column;
+            }
+        }
+
+        /* Developer credit styles */
+        .developer-credit {
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+            font-size: 0.875rem;
+            color: var(--secondary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .developer-credit a {
+            color: var(--primary-color);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.02), transparent);
+        }
+
+        .developer-credit img {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            transition: transform 0.2s ease;
+        }
+
+        .developer-credit a:hover {
+            background: rgba(0, 0, 0, 0.05);
+            transform: translateY(-1px);
+        }
+
+        .developer-credit a:hover img {
+            transform: rotate(360deg);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>API Gateway Dashboard | Aadi Technology</h1>
+            <div class="status-badge online">System Operational</div>
+        </header>
+
+        <div class="tip-card">
+            <div class="tip-title">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M8 1.5V3M8 13v1.5M14.5 8H13M3 8H1.5M12.5 3.5L11.4 4.6M4.6 11.4L3.5 12.5M12.5 12.5L11.4 11.4M4.6 4.6L3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+                <span>Quick Tip</span>
+            </div>
+            <div class="tip-content">
+                <div class="tip-example" id="currentUrl">
+                    <!-- This will be populated by JavaScript -->
+                </div>
+                <p class="tip-description">
+                    Simply append any endpoint path to the current URL. For example, use <code>/ta-api/your-path</code> to access the TA Base API endpoints.
+                </p>
+            </div>
+        </div>
+
+        <div class="endpoints-grid">
+            <div class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="endpoint-name">TA Base API</span>
+                    <div class="endpoint-status">
+                        <div class="status-dot"></div>
+                        <span>Ready</span>
+                    </div>
+                </div>
+                <div class="endpoint-url">/ta-api → ${TA_BASE_URL}</div>
+                <div class="endpoint-metrics">
+                    <div class="metric">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M8 4v8M4 8h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                        <span>Production</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="endpoint-name">RIT Test API</span>
+                    <div class="endpoint-status">
+                        <div class="status-dot"></div>
+                        <span>Ready</span>
+                    </div>
+                </div>
+                <div class="endpoint-url">/rit-test → ${RIT_API_TEST_URL}</div>
+                <div class="endpoint-metrics">
+                    <div class="metric">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M8 4v8M4 8h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                        <span>Testing</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="endpoint-name">RIT API</span>
+                    <div class="endpoint-status">
+                        <div class="status-dot"></div>
+                        <span>Ready</span>
+                    </div>
+                </div>
+                <div class="endpoint-url">/rit-api → ${RIT_API_URL}</div>
+                <div class="endpoint-metrics">
+                    <div class="metric">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M8 4v8M4 8h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                        <span>Production</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="endpoint-name">RIT Base API</span>
+                    <div class="endpoint-status">
+                        <div class="status-dot"></div>
+                        <span>Ready</span>
+                    </div>
+                </div>
+                <div class="endpoint-url">/rit-base → ${RIT_BASE_URL}</div>
+                <div class="endpoint-metrics">
+                    <div class="metric">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M8 4v8M4 8h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                        <span>Production</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="developer-credit">
+            Developed by 
+            <a href="https://github.com/AmanKadam-16/Server-16" target="_blank" rel="noopener noreferrer">
+                Code_RED
+                <img 
+                    src="https://lh3.googleusercontent.com/ogw/AF2bZyiFI7S0RG-ZKShPR9poqNhdOZP9qc1vMlFnUqCZObRz4Jw=s64-c-mo"
+                    alt="Profile"
+                />
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Replace environment variables in the HTML
+        document.body.innerHTML = document.body.innerHTML.replace(/\${([^}]+)}/g, (match, envVar) => {
+            return fetch("/config").then(r => r.json()).then(config => config[envVar]) || 'Not configured';
+        });
+
+        // Check server status periodically
+        setInterval(() => {
+            fetch('/')
+                .then(response => {
+                    const statusDots = document.querySelectorAll('.status-dot');
+                    const statusBadge = document.querySelector('.status-badge');
+                    if (response.ok) {
+                        statusDots.forEach(dot => dot.style.backgroundColor = '#0070f3');
+                        statusBadge.classList.add('online');
+                        statusBadge.textContent = 'System Operational';
+                    } else {
+                        statusDots.forEach(dot => dot.style.backgroundColor = '#ff0000');
+                        statusBadge.classList.remove('online');
+                        statusBadge.textContent = 'System Error';
+                    }
+                })
+                .catch(() => {
+                    const statusDots = document.querySelectorAll('.status-dot');
+                    const statusBadge = document.querySelector('.status-badge');
+                    statusDots.forEach(dot => dot.style.backgroundColor = '#ff0000');
+                    statusBadge.classList.remove('online');
+                    statusBadge.textContent = 'System Error';
+                });
+        }, 5000);
+
+        // Add loading state handling
+        function setLoadingState(isLoading) {
+            const cards = document.querySelectorAll('.endpoint-card');
+            cards.forEach(card => {
+                if (isLoading) {
+                    card.classList.add('loading');
+                } else {
+                    card.classList.remove('loading');
+                }
+            });
+        }
+
+        // Enhanced environment variable replacement
+        async function updateEndpointUrls() {
+            setLoadingState(true);
+            try {
+                const config = await fetch("/config").then(r => r.json());
+                document.querySelectorAll('.endpoint-url').forEach(el => {
+                    const envVar = el.textContent.match(/\${([^}]+)}/)[1];
+                    el.textContent = el.textContent.replace(/\${[^}]+}/, config[envVar] || 'Not configured');
+                });
+            } catch (error) {
+                console.error('Failed to load configuration:', error);
+            } finally {
+                setLoadingState(false);
+            }
+        }
+
+        // Initialize
+        updateEndpointUrls();
+
+        // Enhanced status checking with smooth transitions
+        async function checkStatus() {
+            try {
+                const response = await fetch('/');
+                const statusBadge = document.querySelector('.status-badge');
+                
+                if (response.ok) {
+                    if (!statusBadge.classList.contains('online')) {
+                        statusBadge.style.opacity = '0';
+                        setTimeout(() => {
+                            statusBadge.classList.add('online');
+                            statusBadge.textContent = 'System Operational';
+                            statusBadge.style.opacity = '1';
+                        }, 200);
+                    }
+                } else {
+                    if (statusBadge.classList.contains('online')) {
+                        statusBadge.style.opacity = '0';
+                        setTimeout(() => {
+                            statusBadge.classList.remove('online');
+                            statusBadge.textContent = 'System Error';
+                            statusBadge.style.opacity = '1';
+                        }, 200);
+                    }
+                }
+            } catch (error) {
+                const statusBadge = document.querySelector('.status-badge');
+                if (statusBadge.classList.contains('online')) {
+                    statusBadge.style.opacity = '0';
+                    setTimeout(() => {
+                        statusBadge.classList.remove('online');
+                        statusBadge.textContent = 'System Error';
+                        statusBadge.style.opacity = '1';
+                    }, 200);
+                }
+            }
+        }
+
+        setInterval(checkStatus, 5000);
+        checkStatus();
+
+        // Enhanced click-to-copy functionality for entire cards
+        document.querySelectorAll('.endpoint-card').forEach(card => {
+            card.addEventListener('click', async () => {
+                const urlElement = card.querySelector('.endpoint-url');
+                const baseUrl = window.location.origin;
+                const endpointPath = urlElement.textContent.split('→')[0].trim();
+                const fullUrl = `${baseUrl}${endpointPath}`;
+                
+                try {
+                    await navigator.clipboard.writeText(fullUrl);
+                    
+                    // Visual feedback on the URL element
+                    urlElement.classList.add('copied');
+                    urlElement.style.backgroundColor = '#e2e8f0';
+                    
+                    // Reset states after animation
+                    setTimeout(() => {
+                        urlElement.style.backgroundColor = '#f5f5f5';
+                        urlElement.classList.remove('copied');
+                    }, 1500);
+                } catch (err) {
+                    console.error('Failed to copy:', err);
+                }
+            });
+
+            // Add tooltip on hover
+            card.setAttribute('title', 'Click to copy URL');
+        });
+
+        // Update the current URL example
+        const currentUrl = window.location.origin;
+        document.getElementById('currentUrl').textContent = `${currentUrl}/[endpoint-path]/your-route`;
+
+        // Add click-to-copy for the tip example
+        document.getElementById('currentUrl').addEventListener('click', async () => {
+            const text = document.getElementById('currentUrl').textContent;
+            try {
+                await navigator.clipboard.writeText(text);
+                
+                // Visual feedback
+                const el = document.getElementById('currentUrl');
+                const originalBackground = el.style.background;
+                el.style.background = 'rgba(255, 255, 255, 0.2)';
+                setTimeout(() => {
+                    el.style.background = originalBackground;
+                }, 200);
+            } catch (err) {
+                console.error('Failed to copy:', err);
+            }
+        });
+
+        // Keep URL updating functionality
+        function updateEndpointUrls() {
+            setLoadingState(true);
+            const baseUrl = window.location.origin;
+            
+            fetch("/config")
+                .then(r => r.json())
+                .then(config => {
+                    document.querySelectorAll('.endpoint-card').forEach(card => {
+                        const urlElement = card.querySelector('.endpoint-url');
+                        const [path, target] = urlElement.textContent.split('→').map(s => s.trim());
+                        const envVar = target.match(/\${([^}]+)}/)[1];
+                        urlElement.innerHTML = `
+                            <span class="path">${path}</span> → 
+                            <span class="target">${config[envVar] || 'Not configured'}</span>
+                        `;
+                        card.setAttribute('title', `Click to copy: ${baseUrl}${path}`);
+                    });
+                })
+                .catch(error => {
+                    console.error('Failed to load configuration:', error);
+                })
+                .finally(() => {
+                    setLoadingState(false);
+                });
+        }
+
+        // Initialize
+        updateEndpointUrls();
+
+        // Add visual feedback for copyable elements
+        document.querySelectorAll('.endpoint-card').forEach(card => {
+            card.addEventListener('mouseover', () => {
+                card.style.cursor = 'pointer';
+            });
+        });
+    </script>
+</body>
+</html> 
