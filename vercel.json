@@ -4,12 +4,28 @@
       {
         "src": "proxy.js",
         "use": "@vercel/node"
+      },
+      {
+        "src": "public/**",
+        "use": "@vercel/static"
       }
     ],
     "routes": [
       {
-        "src": "/(.*)",
+        "src": "/",
+        "dest": "/public/index.html"
+      },
+      {
+        "src": "/config",
         "dest": "/proxy.js"
+      },
+      {
+        "src": "/(ta-api|rit-test|rit-api|rit-base)/(.*)",
+        "dest": "/proxy.js"
+      },
+      {
+        "src": "/(.*)",
+        "dest": "/public/$1"
       }
     ]
   }

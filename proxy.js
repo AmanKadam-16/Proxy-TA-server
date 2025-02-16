@@ -8,7 +8,7 @@ const app = express();
 const PORT = 4000;
 
 app.use(cors());
-app.use(express.static('public'));
+// app.use(express.static('public'));
 
 // Health check endpoint
 app.get('/', (req, res) => {
@@ -65,12 +65,12 @@ app.get('/config', (req, res) => {
 });
 
 // Update the script in index.html to fetch config
-const html = fs.readFileSync('./public/index.html', 'utf8');
-const updatedHtml = html.replace(
-  'process.env[envVar]',
-  'fetch("/config").then(r => r.json()).then(config => config[envVar])'
-);
-fs.writeFileSync('./public/index.html', updatedHtml);
+// const html = fs.readFileSync('./public/index.html', 'utf8');
+// const updatedHtml = html.replace(
+//   'process.env[envVar]',
+//   'fetch("/config").then(r => r.json()).then(config => config[envVar])'
+// );
+// fs.writeFileSync('./public/index.html', updatedHtml);
 
 app.listen(PORT, () => {
   console.log(`CORS Proxy running on port ${PORT}`);
