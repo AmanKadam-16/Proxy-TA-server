@@ -83,4 +83,4 @@ The project will be hosted as a **serverless function**.
 
 ---
 
-Developed with passion by **Code_RED**
+Developed with passion by **Code_RED** 🌿
